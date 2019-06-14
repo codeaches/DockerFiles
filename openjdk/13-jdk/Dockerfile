@@ -28,14 +28,30 @@ ENV JAVA_SHA256 010ea985fba7e3d89a9170545c4e697da983cffc442b84e65dba3baa771299a5
 # https://openjdk.java.net/jeps/341
 #############################################################################
 RUN set -o errexit -o nounset; \
-	wget -O /openjdk.tgz "$JAVA_URL"; \
+	wget --no-verbose -O /openjdk.tgz "$JAVA_URL"; \
 	echo "$JAVA_SHA256 */openjdk.tgz" | sha256sum -c -; \
 	mkdir -p "$JAVA_HOME"; \
 	tar --extract --file /openjdk.tgz --directory "$JAVA_HOME" --strip-components 1; \
 	rm /openjdk.tgz; \
-	java -Xshare:dump; \
-	java --version; \
-	javac --version
+	rm "$JAVA_HOME/lib/src.zip"; \
+	java -Xshare:dump;
+
+#############################################################################
+# Set Ant version and URL of Ant download
+#############################################################################
+ENV ANT_HOME /opt/apache-ant-1.10.6
+ENV PATH $ANT_HOME/bin:$PATH
+ENV ANT_VERSION 1.10.6
+ENV ANT_URL https://www-eu.apache.org/dist//ant/binaries/apache-ant-1.10.6-bin.tar.gz
+
+#############################################################################
+# Download and extract apache-ant-1.10.6
+#############################################################################
+RUN set -o errexit -o nounset; \
+	wget --no-verbose -O /ant.tgz "$ANT_URL"; \
+	mkdir -p "$ANT_HOME"; \
+	tar --extract --file /ant.tgz --directory "$ANT_HOME" --strip-components 1; \
+	rm /ant.tgz;
 
 #############################################################################
 # Set Maven version and URL of Maven download
@@ -51,29 +67,10 @@ ENV MAVEN_URL https://www-us.apache.org/dist/maven/maven-3/3.6.1/binaries/apache
 # Download and extract apache-maven-3.6.1
 #############################################################################
 RUN set -o errexit -o nounset; \
-	wget -O /maven.tgz "$MAVEN_URL"; \
+	wget --no-verbose -O /maven.tgz "$MAVEN_URL"; \
 	mkdir -p "$M2_HOME"; \
 	tar --extract --file /maven.tgz --directory "$M2_HOME" --strip-components 1; \
-	rm /maven.tgz; \
-	mvn --version;
-
-#############################################################################
-# Set Ant version and URL of Ant download
-#############################################################################
-ENV ANT_HOME /opt/apache-ant-1.10.6
-ENV PATH $ANT_HOME/bin:$PATH
-ENV ANT_VERSION 1.10.6
-ENV ANT_URL https://www-eu.apache.org/dist//ant/binaries/apache-ant-1.10.6-bin.tar.gz
-
-#############################################################################
-# Download and extract apache-ant-1.10.6
-#############################################################################
-RUN set -o errexit -o nounset; \
-	wget -O /ant.tgz "$ANT_URL"; \
-	mkdir -p "$ANT_HOME"; \
-	tar --extract --file /ant.tgz --directory "$ANT_HOME" --strip-components 1; \
-	rm /ant.tgz; \
-	ant -version;
+	rm /maven.tgz;
 
 #############################################################################
 # Set env for Gradle
@@ -96,7 +93,17 @@ RUN set -o errexit -o nounset; \
 	unzip /gradle.zip -d /opt/gradle; \
 	rm /gradle.zip; \
 	mv /opt/gradle/gradle-5.4.1 /opt; \
-	rm -R /opt/gradle; \
+	rm -R /opt/gradle;
+
+#############################################################################
+# Testing installation
+#############################################################################
+RUN set -o errexit -o nounset; \
+	echo "Testing installation"; \
+	java --version; \
+	javac --version; \
+	ant -version; \
+	mvn --version; \
 	gradle -v;
 
 #############################################################################
