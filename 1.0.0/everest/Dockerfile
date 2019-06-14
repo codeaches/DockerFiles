@@ -1,5 +1,12 @@
 FROM alpine:3.9.4
 
+RUN apk update \
+  && apk add \
+  openssh-client \
+  ca-certificates \
+  bash \
+  git;
+
 ENV JAVA_HOME /opt/openjdk-13
 ENV PATH $JAVA_HOME/bin:$PATH
 
